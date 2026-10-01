@@ -1,0 +1,82 @@
+================================================================================
+                         PROBLEM STATEMENT
+                    Mutual Fund FAQ Assistant (Facts-Only Q&A)
+================================================================================
+
+Product Context
+---------------
+Platform: Groww
+AMC:      HDFC
+
+Schemes:
+  1. HDFC Large Cap Fund
+  2. HDFC Flexi Cap Fund
+  3. HDFC ELSS Tax Saver Fund
+  4. HDFC Small Cap Fund
+  5. HDFC Balanced Advantage Fund
+
+Goal
+----
+Build a small FAQ assistant that answers factual questions about these mutual
+fund schemes.
+
+Example Factual Questions
+------------------------
+- What is the expense ratio?
+- What is the exit load?
+- What is the minimum SIP?
+- What is the ELSS lock-in period?
+- What is the riskometer?
+- What is the benchmark?
+- How can I download my statement?
+
+Requirements
+------------
+- Every answer must include one source link.
+- Answers must be maximum 3 sentences.
+- Include "Last updated from sources:" in answers.
+- Do not make performance claims or calculate returns.
+- Use public sources only.
+- Do not collect or use PII such as PAN, Aadhaar, account numbers, OTPs,
+  email addresses, or phone numbers.
+
+Guardrails
+----------
+- If the user asks whether they should buy, sell, or invest in a fund,
+  do not give investment advice.
+- Respond with a polite facts-only message and provide an educational
+  source link.
+- If the answer is not available in the provided sources, say that you
+  don't know rather than making up an answer.
+
+UI Requirements
+---------------
+- Welcome message
+- 3 example questions
+- Note: "Facts-only. No investment advice."
+
+RAG Architecture
+----------------
+Ingestion:
+  Load → Chunk → Embed → Store in Vector DB
+
+Query:
+  Question → Embed → Retrieve top chunks → LLM → Answer
+
+Technology Constraints
+----------------------
+- Python
+- sentence-transformers/all-MiniLM-L6-v2 for local embeddings
+- ChromaDB as persistent vector database
+- Groq for the LLM
+- Streamlit for the UI
+- Same embedding model for document chunks and user questions
+- ChromaDB must persist between application restarts
+- Groq API key must be stored in .env and never committed to Git
+- Free-tier friendly
+- Locally runnable
+- Deployable on Render
+
+================================================================================
+                              END OF PROBLEM STATEMENT
+================================================================================
