@@ -7,15 +7,8 @@ import os
 import sys
 import streamlit as st
 
-# Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from query.pipeline import answer_question
-
-
-# ============================================================================
-# Page Configuration
-# ============================================================================
 
 st.set_page_config(
     page_title="GrowBot — HDFC Mutual Fund FAQ",
@@ -24,15 +17,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-
-# ============================================================================
-# Custom CSS — Dark Starry Theme
-# ============================================================================
-
 st.markdown(
     """
     <style>
-    /* ===== Override ALL default white backgrounds ===== */
     .stApp,
     .stApp > div,
     .stApp > div > div,
@@ -65,7 +52,6 @@ st.markdown(
         border-color: transparent !important;
     }
 
-    /* ===== Dark gradient background ===== */
     .stApp {
         background: linear-gradient(135deg, #0a0e27 0%, #1a1f4e 50%, #0d1333 100%) !important;
         background-attachment: fixed !important;
@@ -73,7 +59,6 @@ st.markdown(
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
-    /* ===== Starry background via pseudo-element ===== */
     .stApp::before {
         content: "";
         position: fixed;
@@ -107,7 +92,6 @@ st.markdown(
         z-index: 0;
     }
 
-    /* ===== Main content ===== */
     .main .block-container {
         position: relative;
         z-index: 1;
@@ -115,7 +99,6 @@ st.markdown(
         padding: 2rem 1rem;
     }
 
-    /* ===== Header ===== */
     .header-title {
         font-size: 2.5rem;
         font-weight: 700;
@@ -145,7 +128,6 @@ st.markdown(
         margin-top: 0.5rem;
     }
 
-    /* ===== Welcome Section ===== */
     .welcome-title {
         font-size: 1.75rem;
         font-weight: 600;
@@ -163,7 +145,6 @@ st.markdown(
         line-height: 1.6;
     }
 
-    /* ===== Example Cards ===== */
     .stButton > button {
         background: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -181,7 +162,6 @@ st.markdown(
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     }
 
-    /* ===== Chat Container ===== */
     .chat-container {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -192,7 +172,6 @@ st.markdown(
         min-height: 300px;
     }
 
-    /* ===== Chat Bubbles ===== */
     .chat-bubble-user {
         background: linear-gradient(135deg, #3949ab, #5c6bc0) !important;
         color: #ffffff !important;
@@ -215,7 +194,6 @@ st.markdown(
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* ===== Chat Input ===== */
     .stChatInput textarea,
     .stChatInput input {
         border-radius: 25px !important;
@@ -230,7 +208,6 @@ st.markdown(
         color: #7986cb !important;
     }
 
-    /* ===== Disclaimer ===== */
     .disclaimer {
         background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1));
         border: 1px solid rgba(255, 193, 7, 0.3);
@@ -243,7 +220,6 @@ st.markdown(
         font-size: 0.95rem;
     }
 
-    /* ===== Sources ===== */
     .sources-box {
         background: rgba(255, 255, 255, 0.03);
         border-left: 3px solid #5c6bc0;
@@ -263,7 +239,6 @@ st.markdown(
         text-decoration: underline;
     }
 
-    /* ===== Clear Button ===== */
     .clear-btn > button {
         background: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -278,12 +253,10 @@ st.markdown(
         border-color: rgba(255, 255, 255, 0.25) !important;
     }
 
-    /* ===== Hide Default Streamlit Elements ===== */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* ===== Responsive ===== */
     @media (max-width: 768px) {
         .header-title { font-size: 1.75rem; }
         .welcome-title { font-size: 1.5rem; }
@@ -295,21 +268,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
-# ============================================================================
-# Session State
-# ============================================================================
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 
-# ============================================================================
-# UI Components
-# ============================================================================
-
 def render_header():
-    """Render the GrowBot header with leaf visual."""
     st.markdown(
         """
         <div class="header-title">
@@ -323,12 +286,11 @@ def render_header():
 
 
 def render_welcome():
-    """Render the centered welcome section."""
     st.markdown(
         """
         <div class="welcome-title">Hi! I'm GrowBot</div>
         <div class="welcome-text">
-            Ask me anything about HDFC mutual funds — I'll give you accurate, 
+            Ask me anything about HDFC mutual funds — I'll give you accurate,
             easy-to-understand answers with sources.
         </div>
         """,
@@ -337,7 +299,6 @@ def render_welcome():
 
 
 def render_disclaimer():
-    """Render the yellow/gold disclaimer."""
     st.markdown(
         """
         <div class="disclaimer">
@@ -349,7 +310,6 @@ def render_disclaimer():
 
 
 def render_example_questions():
-    """Render 3 clickable example-question cards."""
     st.markdown(
         "<p style='color: #9fa8da; text-align: center; margin-bottom: 0.5rem;'>Try asking:</p>",
         unsafe_allow_html=True,
@@ -376,7 +336,6 @@ def render_example_questions():
 
 
 def render_chat_history():
-    """Render conversation history with styled bubbles."""
     if not st.session_state.messages:
         return
 
@@ -407,7 +366,6 @@ def render_chat_history():
 
 
 def render_clear_button():
-    """Render the Clear Chat button in the top-right."""
     if st.session_state.messages:
         st.markdown(
             """
@@ -426,18 +384,14 @@ def render_clear_button():
 
 
 def process_question(question):
-    """Process a user question and return the answer."""
+    from query.pipeline import answer_question
+
     with st.spinner("Thinking..."):
         result = answer_question(question, top_k=10, verbose=False)
     return result["answer"], result["sources"]
 
 
-# ============================================================================
-# Main App
-# ============================================================================
-
 def main():
-    """Main Streamlit app."""
     render_clear_button()
     render_header()
     render_welcome()
