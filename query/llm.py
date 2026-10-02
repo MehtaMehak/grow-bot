@@ -113,13 +113,13 @@ def call_groq(question, chunks):
     user_message = build_user_message(question, chunks)
 
     response = client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message},
-        ],
-        temperature=0.1,
-        max_tokens=300,
-    )
+    model=GROQ_MODEL,
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message},
+    ],
+    temperature=0.1,
+    max_tokens=1000,
+)
 
     return response.choices[0].message.content.strip()
