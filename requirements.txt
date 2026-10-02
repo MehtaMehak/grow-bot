@@ -1,4 +1,7 @@
-sentence-transformers
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.6.0+cpu
+transformers==4.46.3
+sentence-transformers==3.3.1
 chromadb
 groq
 streamlit
