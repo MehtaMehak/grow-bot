@@ -132,6 +132,32 @@ st.markdown(
     .stButton > button:focus span {
         color: #ffffff !important;
     }
+
+    /* Chat input - fixed at bottom */
+    [data-testid="stChatInput"] {
+        position: fixed !important;
+        bottom: 1rem !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: min(800px, 90vw) !important;
+        z-index: 9999 !important;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        color: #ffffff !important;
+        background: rgba(20, 25, 60, 0.95) !important;
+        border: 1px solid rgba(255,255,255,0.25) !important;
+    }
+
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #b0b8e8 !important;
+        opacity: 1 !important;
+    }
+
+    [data-testid="stChatInput"] button {
+        color: #ffffff !important;
+        background: #3949ab !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,
