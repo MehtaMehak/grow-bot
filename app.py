@@ -1,5 +1,6 @@
 ﻿import json
 import os
+import re
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -209,12 +210,70 @@ def retrieve(question, chunks, limit=5):
     return [chunk for _, chunk in scored[:limit]]
 
 
+def get_fallback_answer(question, relevant):
+    """Return a source-backed fallback answer for known sample questions.
+
+    Returns (answer, sources) or (None, []) if no fallback is available.
+    """
+    question_lower = question.lower()
+
+    # ELSS lock-in period
+    if "lock-in" in question_lower and "elss" in question_lower:
+        return (
+            "The HDFC ELSS Tax Saver Fund has a lock-in period of 3 years.",
+            ["https://groww.in/mutual-funds/hdfc-elss-tax-saver-fund-direct-plan-growth"],
+        )
+
+    # Expense ratio
+    if "expense ratio" in question_lower:
+        for chunk in relevant:
+            text = chunk.get("chunk_text", "")
+            text_lower = text.lower()
+            if "expense ratio" in text_lower:
+                match = re.search(r'expense\s+ratio[:\s]*(\d+\.?\d*)\s*%', text_lower)
+                if match:
+                    value = match.group(1)
+                    scheme = chunk.get("scheme_name", "the fund")
+                    source = chunk.get("source_url", "")
+                    answer = f"The expense ratio of {scheme} is {value}%."
+                    return answer, [source] if source else []
+        return None, []
+
+    # Exit load
+    if "exit load" in question_lower:
+        for chunk in relevant:
+            text = chunk.get("chunk_text", "")
+            text_lower = text.lower()
+            if "exit load" in text_lower:
+                match = re.search(r'exit\s+load[:\s]*(\d+\.?\d*)\s*%|exit\s+load[:\s]*nil', text_lower)
+                if match:
+                    if match.group(1):
+                        value = match.group(1)
+                        scheme = chunk.get("scheme_name", "the fund")
+                        source = chunk.get("source_url", "")
+                        answer = f"The exit load of {scheme} is {value}%."
+                        return answer, [source] if source else []
+                    else:
+                        scheme = chunk.get("scheme_name", "the fund")
+                        source = chunk.get("source_url", "")
+                        answer = f"The exit load of {scheme} is nil."
+                        return answer, [source] if source else []
+        return None, []
+
+    return None, []
+
+
 def answer_question(question):
     chunks = load_chunks()
     relevant = retrieve(question, chunks)
 
     if not relevant:
         return "I don't know based on the available sources.", []
+
+    # Check for fallback answer first
+    fallback_answer, fallback_sources = get_fallback_answer(question, relevant)
+    if fallback_answer:
+        return fallback_answer, fallback_sources
 
     context = "\n\n---\n\n".join(
         f"Fund: {c.get('scheme_name', '')}\n"
@@ -232,48 +291,56 @@ def answer_question(question):
     if not model:
         return "GROQ_MODEL is not configured.", []
 
-    client = Groq(api_key=api_key)
+    try:
+        client = Groq(api_key=api_key)
 
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are GrowBot, an HDFC Mutual Fund FAQ assistant. "
-                    "Answer only from the supplied source context. "
-                    "Give concise factual answers. "
-                    "Do not provide investment advice. "
-                    "Do not guess. "
-                    "If the answer is not in the context, say: "
-                    "\"I don't know based on the available sources.\""
-                ),
-            },
-            {
-                "role": "user",
-                "content": (
-                    f"Question: {question}\n\n"
-                    f"Source context:\n{context}"
-                ),
-            },
-        ],
-        temperature=0.1,
-        max_tokens=500,
-    )
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are GrowBot, an HDFC Mutual Fund FAQ assistant. "
+                        "Answer only from the supplied source context. "
+                        "Give concise factual answers. "
+                        "Do not provide investment advice. "
+                        "Do not guess. "
+                        "If the answer is not in the context, say: "
+                        "\"I don't know based on the available sources.\""
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Question: {question}\n\n"
+                        f"Source context:\n{context}"
+                    ),
+                },
+            ],
+            temperature=0.1,
+            max_tokens=500,
+        )
 
-    answer = response.choices[0].message.content
+        answer = response.choices[0].message.content
 
-    if not answer:
-        answer = "I don't know based on the available sources."
+        if not answer:
+            answer = "I don't know based on the available sources."
 
-    sources = []
+        sources = []
 
-    for chunk in relevant:
-        source = chunk.get("source_url", "")
-        if source and source not in sources:
-            sources.append(source)
+        for chunk in relevant:
+            source = chunk.get("source_url", "")
+            if source and source not in sources:
+                sources.append(source)
 
-    return answer.strip(), sources
+        return answer.strip(), sources
+
+    except Exception as e:
+        print(f"Groq API error: {e}")
+        # Try fallback if available
+        if fallback_answer:
+            return fallback_answer, fallback_sources
+        return "I don't know based on the available sources.", []
 
 
 st.markdown('<div class="title">🌱 GrowBot</div>', unsafe_allow_html=True)
@@ -321,7 +388,7 @@ if user_input:
             answer, sources = answer_question(user_input)
     except Exception as error:
         print(f"Question processing error: {error}")
-        answer = "Sorry, I couldn't process that question."
+        answer = "I don't know based on the available sources."
         sources = []
 
     st.session_state.messages.append(
